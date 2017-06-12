@@ -1,23 +1,16 @@
-Welcome to the Geometric Constructor
+The Geometry Constructor
 
-You can use this program to model compass-and-straightedge geometric constructions
-Read more about it here: https://en.wikipedia.org/wiki/Compass-and-straightedge_construction
+Commands:
 
-The program provides you with two fixed points to start the construction
+Mouse  : click to select entities
 
-You can use the following keyboard commands:
++ / -  : Zoom in or out of view
+Arrows : Pan the view
+     0 : Reset the view
 
-Select: Select or deselect entities by clicking on them
-Delete: Delete selected entities
+     H : Hide selected entities or show all
+Delete : Removes selected entities
+     P : Create a point
 
-0 / H : Hide selected entities or show all
-1 / P : Construct a new point on the intersection of two existing geometries
-2 / C : Construct a circle on two existing points. First select the center point, then select the radius
-3 / L : Construct a line on two existing points by selecting them
-
-+ / - : Zoom in or out of view
-Arrows: Pan the view
-
-Made for the ICS3U programming course, June 2017
-
-Source code at https://github.com/yuliu2016/geometryconstructor
+ICS3U, Introduction to computer sciece
+Last updated June 12, 2017
