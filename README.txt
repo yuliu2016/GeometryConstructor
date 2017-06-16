@@ -12,5 +12,5 @@ Arrows : Pan the view
 Delete : Removes selected entities
      P : Create a point
 
-ICS3U, Introduction to computer sciece
-Last updated June 12, 2017
+ICS3U, Introduction to computer science
+Last updated June 15, 2017

@@ -17,7 +17,9 @@ package ca.wtcs.ics3u.gc;
  * @see Geometry
  */
 
+
 interface Geometry1D
         extends Geometry {
+
 
 }

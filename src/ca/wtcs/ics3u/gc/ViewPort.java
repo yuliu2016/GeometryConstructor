@@ -24,6 +24,27 @@ class ViewPort {
 
 
     /**
+     * The minimum zoom ratio allowed by the view
+     */
+
+    private static final double MIN_ZOOM;
+
+    /**
+     * The maximum zoom ratio allowed by the view
+     */
+
+    private static final double MAX_ZOOM;
+
+    static {
+
+        MIN_ZOOM = 0.15;
+
+        MAX_ZOOM = 6;
+
+    }
+
+
+    /**
      * The position of the view at absolute (0, 0)
      */
 
@@ -126,7 +147,7 @@ class ViewPort {
      * @return the ratio of the scale to the default scale
      */
 
-    double ratio() {
+    double getRatio() {
         return scale / defaultScale;
     }
 
@@ -138,9 +159,10 @@ class ViewPort {
      * @param height height of the window
      */
 
-    void resize(int width, int height) {
+    void setSize(int width, int height) {
         windowCenterX = width / 2.0;
         windowCenterY = height / 2.0;
+        scale = defaultScale;
     }
 
 
@@ -191,7 +213,7 @@ class ViewPort {
     /**
      * Updates the view according to various variables. <br>
      * Computes the new center using the zoom, then the pan. <br>
-     * Keeps the scale in bounds, specified by {@link Const}. <br>
+     * Keeps the scale in bounds
      * Resets everything if viewShouldReset is true. <br>
      */
 
@@ -206,11 +228,11 @@ class ViewPort {
 
         }
 
-        if (scale < Const.MIN_ZOOM_RATIO * defaultScale)
-            scale = Const.MIN_ZOOM_RATIO * defaultScale;
+        if (scale < MIN_ZOOM * defaultScale)
+            scale = MIN_ZOOM * defaultScale;
 
-        if (scale > Const.MAX_ZOOM_RATIO * defaultScale)
-            scale = Const.MAX_ZOOM_RATIO * defaultScale;
+        if (scale > MAX_ZOOM * defaultScale)
+            scale = MAX_ZOOM * defaultScale;
 
 
         if (panX != 0 || panY != 0) {

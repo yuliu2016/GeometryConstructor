@@ -1,13 +1,6 @@
 package ca.wtcs.ics3u.gc;
 
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.LinkedList;
-import java.util.Timer;
-import java.util.TimerTask;
-
-
 /*
  * Created by Yu Liu on 2017-06-06
  * ICS3U - Culminating Project - A compass-and-straightedge construction tool
@@ -16,11 +9,18 @@ import java.util.TimerTask;
  */
 
 
+import java.awt.*;
+import java.awt.event.*;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
+
+
 /**
- * A <code>GraphView</code>  is a frame component designed to provide a geometric construction tool.
+ * A <code>GraphView</code>  is a canvas component designed to provide a geometric construction tool.
  * <p>
  * This component may be placed anywhere that allows a <code>java.awt.Frame</code>,
- * provided it gets a minimum size specified in {@link Const};
+ * provided it has a minimum size specified in MINIMUM_DIMENSION;
  * or it can be created as standalone by instantiating this class.
  * The component can be resized and would update accordingly,
  * including a new default scale. See {@link ViewPort} for more details.
@@ -37,15 +37,51 @@ import java.util.TimerTask;
  * </p>
  *
  * @author Yu Liu
- * @see Const
  * @see ViewPort
  * @see Geometry
  */
 
 
 public final class GraphView
-        extends Frame
+        extends BufferedCanvas
         implements KeyListener, MouseListener, MouseMotionListener {
+
+    /**
+     * The minimum dimension that this component can be resized to
+     */
+
+    static final Dimension MINIMUM_DIMENSION;
+
+    /**
+     * The rate of update as set by a timer object
+     */
+
+    private static final int FRAME_RATE;
+
+    /**
+     * The amount of pan applied when the viewport updates
+     */
+
+    private static final int PAN;
+
+    /**
+     * The rate of zoom applied when the viewport updates
+     */
+
+    private static final double ZOOM;
+
+
+    static {
+
+        MINIMUM_DIMENSION = new Dimension(300, 300);
+
+        FRAME_RATE = 15;
+
+        PAN = 15;
+
+        ZOOM = 1.05;
+
+    }
 
 
     /**
@@ -81,6 +117,8 @@ public final class GraphView
 
     private int tool;
 
+    private boolean viewHasReset;
+
 
     /**
      * Initializes the component and start the timer
@@ -97,20 +135,16 @@ public final class GraphView
 
     GraphView() {
 
-        super("Geometry Constructor");
-
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                dispose();
-            }
-        });
 
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                viewPort.resize(getWidth(), getHeight());
                 viewPort.setDefaultScale(getWidth() / 8);
+                viewPort.setSize(getWidth(), getHeight());
+                if (!viewHasReset) {
+                    viewPort.resetView();
+                    viewHasReset = true;
+                }
             }
         });
 
@@ -118,25 +152,20 @@ public final class GraphView
         addMouseListener(this);
         addMouseMotionListener(this);
 
-        setBounds(100, 100, Const.DEFAULT_WIDTH, Const.DEFAULT_HEIGHT);
-        setMinimumSize(new Dimension(Const.MINIMUM_WIDTH, Const.MINIMUM_HEIGHT));
-
-        viewPort.resetView();
+        setMinimumSize(MINIMUM_DIMENSION);
 
         entities.clear();
-
         entities.add(new Point(0.5, 0));
         entities.add(new Point(-0.5, 0));
 
         Timer timer = new Timer(true);
-
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 viewPort.update();
                 repaint();
             }
-        }, 0, Const.FRAME_PERIOD);
+        }, 0, FRAME_RATE);
 
         setVisible(true);
 
@@ -170,7 +199,7 @@ public final class GraphView
      */
 
     private String getViewLabel() {
-        return getWidth() + " × " + getHeight() + " : " + (int) (viewPort.ratio() * 100) + "%";
+        return getWidth() + " × " + getHeight() + " : " + (int) (viewPort.getRatio() * 100) + "%";
     }
 
 
@@ -185,9 +214,9 @@ public final class GraphView
         int selected = 0, hidden = 0;
 
         for (Geometry entity : entities) {
-            if (entity.isSelected())
+            if (entity.getSelected())
                 selected++;
-            if (entity.isHidden())
+            if (entity.getHidden())
                 hidden++;
         }
 
@@ -220,7 +249,7 @@ public final class GraphView
     private boolean hasSelection() {
 
         for (Geometry entity : entities)
-            if (entity.isSelected())
+            if (entity.getSelected())
                 return true;
 
         return false;
@@ -241,7 +270,7 @@ public final class GraphView
         boolean over = mouseIsOverEntities();
 
         for (Geometry entity : entities)
-            entity.setSelected(over && entity.isSelected() ^ entity.isMouseOver(mouseX, mouseY, viewPort));
+            entity.setSelected(over && entity.getSelected() ^ entity.isMouseOver(mouseX, mouseY, viewPort));
 
     }
 
@@ -268,7 +297,7 @@ public final class GraphView
         LinkedList<Geometry> toBeRemoved = new LinkedList<>();
 
         for (Geometry entity : entities)
-            if (entity.isSelected())
+            if (entity.getSelected())
                 toBeRemoved.add(entity);
 
         entities.removeAll(toBeRemoved);
@@ -291,13 +320,13 @@ public final class GraphView
         for (Geometry entity : entities) {
 
             if (selected) {
-                if (entity.isSelected()) {
+                if (entity.getSelected()) {
                     entity.setHidden(true);
                 }
                 entity.setSelected(false);
             } else {
 
-                if (entity.isHidden()) {
+                if (entity.getHidden()) {
                     entity.setSelected(true);
                 }
                 entity.setHidden(false);
@@ -321,24 +350,24 @@ public final class GraphView
 
         switch (key) {
 
-            case KeyEvent.VK_UP:
-                viewPort.setPan(0, -Const.PAN_RATE);
-                break;
-            case KeyEvent.VK_DOWN:
-                viewPort.setPan(0, Const.PAN_RATE);
-                break;
             case KeyEvent.VK_LEFT:
-                viewPort.setPan(-Const.PAN_RATE, 0);
+                viewPort.setPan(-PAN, 0);
                 break;
             case KeyEvent.VK_RIGHT:
-                viewPort.setPan(Const.PAN_RATE, 0);
+                viewPort.setPan(PAN, 0);
+                break;
+            case KeyEvent.VK_UP:
+                viewPort.setPan(0, -PAN);
+                break;
+            case KeyEvent.VK_DOWN:
+                viewPort.setPan(0, PAN);
                 break;
 
-            case KeyEvent.VK_EQUALS:
-                viewPort.setZoom(Const.ZOOM_RATE);
-                break;
             case KeyEvent.VK_MINUS:
-                viewPort.setZoom(1 / Const.ZOOM_RATE);
+                viewPort.setZoom(1 / ZOOM);
+                break;
+            case KeyEvent.VK_EQUALS:
+                viewPort.setZoom(ZOOM);
                 break;
 
             default:
@@ -476,7 +505,6 @@ public final class GraphView
      *
      * @param g the graphic context to be drawn on
      */
-
 
     @Override
     public void paint(Graphics g) {
