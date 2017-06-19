@@ -25,13 +25,12 @@ import java.util.TimerTask;
  * The component can be resized and would update accordingly,
  * including a new default scale. See {@link ViewPort} for more details.
  * This component receives events from its window, component, keyboard, and mouse;
- * it is not tested how it will respond to these events when it is used in another container.
  * </p>
  * <p>
  * This class keeps track of objects relating to the viewport,
  * values relating to the mouse and key events, and a list of objects that implement
  * {@link Geometry} to be created, displayed, and modified by the user through
- * interations with this component
+ * interactions with this component
  * The class is declared <code>final</code> because much of the code in this design
  * are not reusable for extensions
  * </p>
@@ -90,23 +89,24 @@ public final class GraphView
 
     private ViewPort viewPort = new ViewPort();
 
-    /**
-     * The list of geometric objects that have been fixed or constructed
-     */
-
-    private LinkedList<Geometry> entities = new LinkedList<>();
 
     /**
-     * The X coordinate of the mouse(if mouse is inside the component)
+     * The list of all the points on the graph
      */
 
-    private int mouseX;
+    private LinkedList<Point> points = new LinkedList<>();
 
     /**
-     * The Y coordinate of the mouse(if mouse is inside the component)
+     * The list of geometric objects that have been constructed
      */
 
-    private int mouseY;
+    private LinkedList<Geometry> shapes = new LinkedList<>();
+
+    /**
+     * The x and y coordinate of the mouse(if mouse is inside the component)
+     */
+
+    private int mouseX, mouseY;
 
 
     /**
@@ -117,7 +117,19 @@ public final class GraphView
 
     private int tool;
 
+
+    /**
+     * Indicates whether the component has reset the view for the first time
+     */
+
     private boolean viewHasReset;
+
+
+    /**
+     * Counts the selected and hidden entities
+     */
+
+    private int selected, hidden;
 
 
     /**
@@ -134,7 +146,6 @@ public final class GraphView
      */
 
     GraphView() {
-
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -154,11 +165,20 @@ public final class GraphView
 
         setMinimumSize(MINIMUM_DIMENSION);
 
-        entities.clear();
-        entities.add(new Point(0.5, 0));
-        entities.add(new Point(-0.5, 0));
+        Point p1 = new Point(0.5, 0);
+        Point p2 = new Point(-0.5, 0);
+
+        points.add(p1);
+        points.add(p2);
+
+        shapes.add(new Circle(p1, p2));
+        shapes.add(new Circle(p2, p1));
+
+        selected = 0;
+        hidden = 0;
 
         Timer timer = new Timer(true);
+
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -167,7 +187,8 @@ public final class GraphView
             }
         }, 0, FRAME_RATE);
 
-        setVisible(true);
+        requestFocus();
+        requestFocusInWindow();
 
     }
 
@@ -183,6 +204,8 @@ public final class GraphView
         switch (tool) {
             case 1:
                 return "Point Tool";
+            case 2:
+                return "Circle Tool";
             default:
                 return "Selection Tool";
         }
@@ -210,16 +233,6 @@ public final class GraphView
      */
 
     private String getNumericalLabel() {
-
-        int selected = 0, hidden = 0;
-
-        for (Geometry entity : entities) {
-            if (entity.getSelected())
-                selected++;
-            if (entity.getHidden())
-                hidden++;
-        }
-
         return selected + " Selected, " + hidden + " Hidden";
     }
 
@@ -230,10 +243,14 @@ public final class GraphView
      * @return if the mouse is hovering on any entities
      */
 
-    private boolean mouseIsOverEntities() {
+    private boolean anyEntityHovered() {
 
-        for (Geometry entity : entities)
+        for (Geometry entity : shapes)
             if (entity.isMouseOver(mouseX, mouseY, viewPort))
+                return true;
+
+        for (Point point : points)
+            if (point.isMouseOver(mouseX, mouseY, viewPort))
                 return true;
 
         return false;
@@ -246,10 +263,14 @@ public final class GraphView
      * @return if any entities are selected
      */
 
-    private boolean hasSelection() {
+    private boolean anyEntitySelected() {
 
-        for (Geometry entity : entities)
-            if (entity.getSelected())
+        for (Geometry entity : shapes)
+            if (entity.isSelected())
+                return true;
+
+        for (Point point : points)
+            if (point.isSelected())
                 return true;
 
         return false;
@@ -267,11 +288,28 @@ public final class GraphView
 
     private void selectEntities() {
 
-        boolean over = mouseIsOverEntities();
+        boolean over = anyEntityHovered();
+        selected = 0;
 
-        for (Geometry entity : entities)
-            entity.setSelected(over && entity.getSelected() ^ entity.isMouseOver(mouseX, mouseY, viewPort));
+        for (Point point : points) {
+            point.setSelected(over && point.isSelected() ^ point.isMouseOver(mouseX, mouseY, viewPort));
+            selected += point.isSelected() ? 1 : 0;
+        }
 
+        for (Geometry entity : shapes) {
+            entity.setSelected(over && entity.isSelected() ^ entity.isMouseOver(mouseX, mouseY, viewPort));
+            selected += entity.isSelected() ? 1 : 0;
+        }
+
+
+    }
+
+    /**
+     * Adds a fixed point onto the graph
+     */
+
+    private void addFixedPoint(double x, double y) {
+        points.add(new Point(x, y));
     }
 
 
@@ -281,26 +319,26 @@ public final class GraphView
 
     private void insertPoint() {
 
-        if (!mouseIsOverEntities())
-            entities.add(new Point(viewPort.computeFromX(mouseX), viewPort.computeFromY(mouseY)));
+        if (!anyEntityHovered())
+            addFixedPoint(viewPort.computeFromX(mouseX), viewPort.computeFromY(mouseY));
 
     }
 
 
     /**
      * Creates a list that include all item selected to be removed,
-     * then subtract it from the {@link GraphView#entities} list
+     * then subtract it from the {@link GraphView#shapes} list
      */
 
     private void deleteSelected() {
 
         LinkedList<Geometry> toBeRemoved = new LinkedList<>();
 
-        for (Geometry entity : entities)
-            if (entity.getSelected())
+        for (Geometry entity : shapes)
+            if (entity.isSelected())
                 toBeRemoved.add(entity);
 
-        entities.removeAll(toBeRemoved);
+        shapes.removeAll(toBeRemoved);
 
     }
 
@@ -315,23 +353,30 @@ public final class GraphView
 
     private void hideSelectedOrShowAll() {
 
-        boolean selected = hasSelection();
+        boolean anySelected = anyEntitySelected();
+        boolean either;
+        hidden = 0;
 
-        for (Geometry entity : entities) {
+        for (Point point : points) {
 
-            if (selected) {
-                if (entity.getSelected()) {
-                    entity.setHidden(true);
-                }
-                entity.setSelected(false);
-            } else {
+            either = point.isSelected() || point.isHidden();
 
-                if (entity.getHidden()) {
-                    entity.setSelected(true);
-                }
-                entity.setHidden(false);
-            }
+            point.setHidden(anySelected && either);
+            point.setSelected(!anySelected && either);
+
+            hidden += anySelected && either ? 1 : 0;
         }
+
+        for (Geometry entity : shapes) {
+
+            either = entity.isSelected() || entity.isHidden();
+
+            entity.setHidden(anySelected && either);
+            entity.setSelected(!anySelected && either);
+
+            hidden += anySelected && either ? 1 : 0;
+        }
+
     }
 
 
@@ -420,6 +465,8 @@ public final class GraphView
             case KeyEvent.VK_P:
                 tool = 1;
                 break;
+            case KeyEvent.VK_C:
+                tool = 2;
 
             default:
         }
@@ -509,10 +556,22 @@ public final class GraphView
     @Override
     public void paint(Graphics g) {
 
-        for (Geometry entity : entities) {
+        LinkedList<Geometry> paintLast = new LinkedList<>();
+
+        for (Geometry entity : shapes) {
             entity.setHovered(entity.isMouseOver(mouseX, mouseY, viewPort));
-            entity.paint(g, viewPort);
+            if (entity.isSelected() || entity.isHovered()) paintLast.add(entity);
+            else entity.paint(g, viewPort);
         }
+
+        for (Point point : points) {
+            point.setHovered(point.isMouseOver(mouseX, mouseY, viewPort));
+            if (point.isSelected() || point.isHovered()) paintLast.add(point);
+            point.paint(g, viewPort);
+        }
+
+        for (Geometry entity : paintLast)
+            entity.paint(g, viewPort);
 
         g.setColor(Color.BLUE);
 

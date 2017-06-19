@@ -43,55 +43,45 @@ class ViewPort {
 
     }
 
-
     /**
      * The position of the view at absolute (0, 0)
      */
 
     private double centerX, centerY;
-
-
     /**
      * The position of the window's center
      */
 
     private double windowCenterX, windowCenterY;
-
-
     /**
      * The rate of pan per update
      */
 
     private double panX, panY;
-
-
     /**
      * The default scale of the view
      */
 
     private double defaultScale;
-
-
     /**
      * The current scale of the view
      */
 
     private double scale;
-
-
     /**
      * The zoom ratio
      */
 
     private double zoom;
-
-
     /**
      * Whether the view should reset
      */
 
     private boolean viewShouldReset;
 
+    static double mag(double dx, double dy) {
+        return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+    }
 
     /**
      * Computes the absolute position of a relative x value according to the view
@@ -153,7 +143,7 @@ class ViewPort {
 
 
     /**
-     * Resizes the size of the window
+     * Resize the window
      *
      * @param width  width of the window
      * @param height height of the window

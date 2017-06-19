@@ -19,11 +19,31 @@ import java.awt.*;
  * also be able to add itself into a {@link GraphView}
  *
  * @author Yu Liu
- * @see Geometry1D
  */
 
 
-public interface Geometry {
+abstract class Geometry {
+
+
+    /**
+     * The selected state of the geometry
+     */
+
+    private boolean selected;
+
+
+    /**
+     * The hidden state of the geometry
+     */
+
+    private boolean hidden;
+
+
+    /**
+     * The hovered state of the geometry
+     */
+
+    private boolean hovered;
 
 
     /**
@@ -33,7 +53,7 @@ public interface Geometry {
      * @param viewPort the viewport context to determine position
      */
 
-    void paint(Graphics g, ViewPort viewPort);
+    abstract void paint(Graphics g, ViewPort viewPort);
 
 
     /**
@@ -45,7 +65,7 @@ public interface Geometry {
      * @return if the mouse is over geometry
      */
 
-    boolean isMouseOver(int mouseX, int mouseY, ViewPort viewPort);
+    abstract boolean isMouseOver(int mouseX, int mouseY, ViewPort viewPort);
 
 
     /**
@@ -54,7 +74,9 @@ public interface Geometry {
      * @return if the geometry is selected
      */
 
-    boolean getSelected();
+    boolean isSelected() {
+        return selected;
+    }
 
     /**
      * Sets the selected state of geometry
@@ -62,7 +84,9 @@ public interface Geometry {
      * @param selected the selected state of geometry
      */
 
-    void setSelected(boolean selected);
+    void setSelected(boolean selected) {
+        this.selected = selected;
+    }
 
     /**
      * Determines if the geometry is hidden
@@ -70,16 +94,29 @@ public interface Geometry {
      * @return if the geometry is hidden
      */
 
-    boolean getHidden();
+    boolean isHidden() {
+        return hidden;
+    }
 
     /**
      * Sets the hidden state of geometry
      *
-     * @param hidden the hidden state of geometry
+     * @param hidden the hidden state of the geometry
      */
 
-    void setHidden(boolean hidden);
+    void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
 
+    /**
+     * Determines if the geometry is on mouseover
+     *
+     * @return if the geometry is hidden
+     */
+
+    boolean isHovered() {
+        return hovered;
+    }
 
     /**
      * Sets the hovered state of geometry
@@ -87,6 +124,19 @@ public interface Geometry {
      * @param hovered the hovered state of geometry
      */
 
-    void setHovered(boolean hovered);
+    void setHovered(boolean hovered) {
+        this.hovered = hovered;
+    }
+
+    /**
+     * Determines the color of the geometric object according to its state.
+     * Overriding paint method should call this method to determine color
+     *
+     * @return The unified colour of the object
+     */
+
+    Color getColor() {
+        return hovered || selected ? Color.BLUE : Color.BLACK;
+    }
 
 }

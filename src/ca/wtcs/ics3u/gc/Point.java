@@ -19,12 +19,11 @@ import java.awt.*;
  *
  * @author Yu Liu
  * @see Geometry
- * @see Geometry1D
  */
 
 
 public class Point
-        implements Geometry1D {
+        extends Geometry {
 
 
     /**
@@ -39,11 +38,11 @@ public class Point
      * is over the point
      */
 
-    private static final int RANGE_RADIUS;
+    private static final int RANGE;
 
     static {
         RADIUS = 5;
-        RANGE_RADIUS = 8;
+        RANGE = 8;
     }
 
     /**
@@ -51,14 +50,6 @@ public class Point
      */
 
     private double x, y;
-
-
-    /**
-     * The states of the point
-     */
-
-    private boolean hovered, selected, hidden;
-
 
     /**
      * Initializes a point with coordinates
@@ -72,8 +63,16 @@ public class Point
         this.y = y;
     }
 
+    double getX() {
+        return x;
+    }
+
+    double getY() {
+        return y;
+    }
+
     /**
-     * Paints the point according to size specified in RADIUS and RANGE_RADIUS
+     * Paints the point according to size specified in RADIUS and RANGE
      * and position computed from the viewport.
      * Its colour depends on if it is selected/hovered.
      * If hovered paint an extra ring outside the point
@@ -85,23 +84,23 @@ public class Point
     @Override
     public void paint(Graphics g, ViewPort viewPort) {
 
-        if (!hidden) {
+        if (!isHidden()) {
 
             int vx = viewPort.computeX(x) - RADIUS;
             int vy = viewPort.computeY(y) - RADIUS;
 
-            g.setColor(hovered || selected ? Color.BLUE : Color.BLACK);
+            g.setColor(getColor());
             g.fillOval(vx, vy, RADIUS * 2, RADIUS * 2);
 
-            if (hovered)
-                g.drawOval(vx - RANGE_RADIUS + RADIUS, vy - RANGE_RADIUS + RADIUS, RANGE_RADIUS * 2, RANGE_RADIUS * 2);
+            if (isHovered())
+                g.drawOval(vx - RANGE + RADIUS, vy - RANGE + RADIUS, RANGE * 2, RANGE * 2);
         }
     }
 
 
     /**
      * Determines if a mouse position is hovering over the point
-     * (i.e. mouse is within distance of RANGE_RADIUS)
+     * (i.e. mouse is within distance of RANGE)
      *
      * @param mouseX   the X position of the mouse
      * @param mouseY   the Y position of the mouse
@@ -111,63 +110,7 @@ public class Point
 
     @Override
     public boolean isMouseOver(int mouseX, int mouseY, ViewPort viewPort) {
-        return Math.sqrt(Math.pow(mouseX - viewPort.computeX(x), 2) + Math.pow(mouseY - viewPort.computeY(y), 2)) < RANGE_RADIUS;
-    }
-
-
-    /**
-     * Determines if the point is selected
-     *
-     * @return if the point is selected
-     */
-
-    @Override
-    public boolean getSelected() {
-        return selected;
-    }
-
-    /**
-     * Sets the selected state of point
-     *
-     * @param selected the selected state of point
-     */
-
-    @Override
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    /**
-     * Determines if the point is hidden
-     *
-     * @return if the point is hidden
-     */
-
-    @Override
-    public boolean getHidden() {
-        return hidden;
-    }
-
-    /**
-     * Sets the hidden state of point
-     *
-     * @param hidden the hidden state of point
-     */
-
-    @Override
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
-    /**
-     * Sets the hovered state of point
-     *
-     * @param hovered the hovered state of point
-     */
-
-    @Override
-    public void setHovered(boolean hovered) {
-        this.hovered = hovered;
+        return ViewPort.mag(mouseX - viewPort.computeX(x), mouseY - viewPort.computeY(y)) < RANGE;
     }
 
 }

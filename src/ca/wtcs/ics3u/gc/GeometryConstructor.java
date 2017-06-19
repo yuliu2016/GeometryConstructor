@@ -41,7 +41,7 @@ public class GeometryConstructor {
 
 
     static {
-        DEFAULT_DIMENSION = new Dimension(600, 450);
+        DEFAULT_DIMENSION = new Dimension(800, 600);
         TITLE = "Geometry Constructor";
     }
 
@@ -54,33 +54,33 @@ public class GeometryConstructor {
 
     public static void main(String[] args) {
 
-        Frame application = new Frame(TITLE);
+        Frame app = new Frame(TITLE);
         GraphView graphView = new GraphView();
 
-        application.setSize(DEFAULT_DIMENSION);
-        application.setLayout(null);
-        application.setResizable(true);
+        app.setSize(DEFAULT_DIMENSION);
+        app.setLayout(null);
+        app.setResizable(true);
 
-        application.add(graphView);
+        app.add(graphView);
 
-        application.addWindowListener(new WindowAdapter() {
+        app.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                application.dispose();
+                app.dispose();
                 System.exit(0);
             }
         });
 
-        application.addComponentListener(new ComponentAdapter() {
+        app.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                Dimension newSize = application.getSize();
+                Dimension newSize = app.getSize();
                 graphView.setSize(newSize.width, newSize.height);
             }
         });
 
-        application.setMinimumSize(GraphView.MINIMUM_DIMENSION);
-        application.setVisible(true);
+        app.setMinimumSize(GraphView.MINIMUM_DIMENSION);
+        app.setVisible(true);
     }
 
 }
